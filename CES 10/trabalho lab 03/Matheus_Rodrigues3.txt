@@ -1,0 +1,48 @@
+-------------------------------------- 
+          PROGRAMA CONVERSOR          
+      Exemplo de arquivo de saida     
+--------------------------------------
+3500.00 metros = 
+        2 milhas + 
+      307 jardas + 
+        1 pes    + 
+       11 polegadas 
+
+1000000.00 metros = 
+      621 milhas + 
+      653 jardas + 
+        0 pes    + 
+       10 polegadas 
+
+25.00 graus Celsius = 
+       77 graus Fahrenheit 
+
+45.00 kilogramas = 
+       99 libras 
+
+98.00 metros = 
+        0 milhas + 
+      107 jardas + 
+        0 pes    + 
+        6 polegadas 
+
+25.00 metros = 
+        0 milhas + 
+       27 jardas + 
+        1 pes    + 
+        0 polegadas 
+
+--------------------------------------
+(a) Quantidade de casos de cada tipo: 
+    Massa      :   1 vezes. 
+    Temperatura:   1 vezes. 
+    Distancia  :   4 vezes. 
+
+(b) Qual a maior massa: 
+    99 libras. 
+
+(c) Qual a menor temperatura: 
+    77 graus Fahrenheit. 
+
+--------------------------------------
+Fim do Arquivo.
