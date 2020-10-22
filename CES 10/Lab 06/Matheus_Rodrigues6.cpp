@@ -64,7 +64,7 @@ int main()
         //Leitura da localização do arquivo
         fscanf (entrada, "%s", localArq);
 
-        //Faz a variável 'Ant' assumir o valor anteriormente armazenado 
+        //Faz a variável assumir o valor anteriormente armazenado 
         //e faz o boolean assumir "TRUE" caso 'localArq' seja lido como "=" ou esteja repetido
         if (strcmp(localArq, "=") == 0 || strcmp(localArq, localArqAnt) == 0) 
         {
