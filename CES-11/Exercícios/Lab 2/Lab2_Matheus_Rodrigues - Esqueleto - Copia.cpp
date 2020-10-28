@@ -114,7 +114,7 @@ void AdicionarUnidades () {
 	scanf ("%d", &unids);
    	loc = Local (nome);
 	if (loc.estah == TRUE)
-		MaisUnidades (unids, loc.posic->prox);
+		MaisUnidades (unids, loc.posic);
 	else {
    		strcpy (eletro.nome, nome); eletro.unids = unids;
 		Inserir (eletro, loc.posic);
@@ -135,11 +135,11 @@ void RetirarUnidades () {
 	printf ("Unidades retiradas: "); 
 	scanf ("%d", &unids);
 	loc = Local (nome);
-	if (loc.estah == TRUE && loc.posic->prox->eletro.unids != unids){
-		MenosUnidades (unids, loc.posic->prox);
+	if (loc.estah == TRUE && loc.posic->eletro.unids != unids){
+		MenosUnidades (unids, loc.posic);
 	}
-	else if (loc.estah == TRUE && loc.posic->prox->eletro.unids == unids)
-		Deletar (loc.posic->prox);
+	else if (loc.estah == TRUE && loc.posic->eletro.unids == unids)
+		Deletar (loc.posic);
 	else
 		printf ("O eletrodomestico nao esta contido no estoque");
 	printf ("\nDigite algo para continuar: ");
@@ -197,28 +197,21 @@ void ListarEstoque () {
 void InicializarEstoque () {
 	posicao p;
 	p = (noh *) malloc (sizeof (noh));
-	p->prox = NULL;
 	Estoque.inic = Estoque.fim = p;
-	
+	p->prox = NULL;
 }
 
 void Inserir (eletrodomestico eletro, posicao p) {
-	
-	posicao novo;
-	novo = (noh *) malloc (sizeof (noh));
-	novo->prox = p->prox;
-	novo->eletro = eletro;
-	p->prox = novo;
+	Estoque.fim->prox = (noh *) malloc (sizeof (noh));
+	Estoque.fim = Estoque.fim->prox;
+	Estoque.fim->prox = NULL;
 
-	if (novo->prox == NULL)
-	{
-		Estoque.fim = novo;
-	}
-	
+	p = Estoque.fim;
+	p->eletro = eletro;
+
 }
 
 void Deletar (posicao p) {
-
 	posicao percorre,
 			apaga;
 
@@ -271,12 +264,22 @@ infolocal Local (string nome) {
 	loc1.posic = NULL;
 	loc1.estah = FALSE;
 
-	for (pont1 = Estoque.inic; pont1->prox != NULL && strcmp(pont1->prox->eletro.nome, nome) < 0; pont1 = pont1->prox){}
-	loc1.posic = pont1;
-	if (pont1->prox != NULL && strcmp(pont1->prox->eletro.nome, nome) == 0)
+	for (pont1 = Estoque.inic; pont1 != Estoque.fim && loc1.estah == FALSE; pont1 = pont1->prox)
 	{
-		loc1.estah = TRUE;
+		if (strcmp(pont1->eletro.nome, nome) == 0)
+		{
+			loc1.posic = pont1;
+			loc1.estah = TRUE;
+		}
+		
 	}
+	// if (loc1.estah == FALSE)
+	// {
+	// 	for (pont1 = Estoque.inic; strcmp(pont1->prox->eletro.nome, nome) < 0 ; pont1 = pont1->prox){}
+	// 	loc1.posic = pont1;
+		
+	// }
+	
 
 	return loc1;
 	
