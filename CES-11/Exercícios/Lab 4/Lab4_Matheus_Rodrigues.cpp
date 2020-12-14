@@ -1,3 +1,9 @@
+/* Matheus Rodrigues Araújo                */
+/* Turma 24.1                              */
+/*                                         */
+/* Exercício 4: Árvores                    */
+/* Programa compilado com CodeBlocks 17.12 */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <conio.h>
@@ -36,8 +42,8 @@ struct celfloresta {
 /* Variaveis globais  */
 
 floresta F;
-floresta pontPai, pontFilho, pontAux;
-logic paiEstah = FALSE, filhoEstah = FALSE;
+// floresta pontPai = NULL, pontFilho = NULL, pontAux;
+// logic paiEstah = FALSE, filhoEstah = FALSE;
 string StrFloresta;  // guarda os caracteres digitados
 
 /* Prototipos das funcoes dependentes da estrutura para arvores  */
@@ -69,6 +75,13 @@ void EntrarFila (noh, fila *);
 noh DeletarFila (fila *);
 char FilaVazia (fila);
 
+/* Prototipos das funcoes que escrevem informacoes da arvore  */
+void Parentetica (arvore);
+int Altura (noh, arvore);
+int NumNohs (noh, arvore);
+int MaxLargura (arvore);
+int NivelLargura (arvore, int);
+
 
 int main ()
 {
@@ -88,6 +101,18 @@ int main ()
     {
         A = Criacao (c, F);
 	    printf ("\n\n"); EscreverNiveis (A);
+
+        if (ArvVazia(A) == FALSE)
+        {
+            printf ("\nArvore na forma parentetica: \n");
+            Parentetica(A);
+            printf ("\n");
+
+            printf ("Altura: %d\n", Altura(A,A));
+            printf ("Numero de nohs: %d\n", NumNohs(A,A));
+            printf ("Largura: %d",MaxLargura(A));
+        }
+        
     }
     else
     {
@@ -116,6 +141,7 @@ void FormarListaNohs ()
         posicao = posicao->prox;
         posicao->elem = (celula *) malloc (sizeof (celula));
 
+        // Armazenar o char da string na floresta caso seja válido
         if (isdigit(StrFloresta[i]) || isalpha(StrFloresta[i]))
         {
             posicao->elem->info = StrFloresta[i];
@@ -216,66 +242,82 @@ char FilaVazia (fila f) {
 }
 
 /*		Funcoes para ligar pais e filhos    */
-void ProcuraArvore (char carac1, char carac2)
-{
-    floresta percorreArv;
-
-    for (percorreArv = F; percorreArv->prox != NULL; percorreArv = percorreArv->prox)
-    {
-        if (percorreArv->prox->elem->info == carac1)
-        {
-            pontPai = percorreArv->prox;
-            paiEstah = TRUE;
-        }
-        if (percorreArv->prox->elem->info == carac2)
-        {
-            pontAux = percorreArv;
-            pontFilho = percorreArv->prox;
-            filhoEstah = TRUE;
-        }
-    }
-
-}
-
 void LigarPaisFilhos ()
 {
-    int k, n;
+    int i, n, numValidos = 1;
     string par;
+    floresta pai, filho, percorreSelva, aux;
+    logic paiEstah, filhoEstah;
 
     printf ("Digite o numero de pares: \n");
     scanf ("%d",&n);
-    for (k = 1; k <= n; k++)
+
+    for (i = 1; i <= n; i++)
     {
-        printf ("Digite o par numero %d: \n", k);
+        printf ("Digite o par numero %d: \n", numValidos);
+        setbuf(stdin, NULL);
         scanf ("%s", par);
 
-        ProcuraArvore (par[0], par[1]);
-        if (par[0] != par[1] && strlen (par) == 2 && paiEstah == TRUE && filhoEstah == TRUE && pontFilho->elem->pai == NULL) 
+        // Inicializar as booleanas com false por padrão
+        paiEstah = FALSE;
+        filhoEstah = FALSE;
+
+        // Verificar se o par esta na floresta e marcar sua posicao
+        for (percorreSelva = F->prox; percorreSelva != NULL; percorreSelva = percorreSelva->prox)
         {
-            if (pontPai->elem->fesq == NULL)
+            if (percorreSelva->elem->info == par[0])
             {
-                pontPai->elem->fesq = pontFilho->elem;
-                pontFilho->elem->pai = pontPai->elem;
-                
+                pai = percorreSelva;
+                paiEstah = TRUE;
+            }
+            if (percorreSelva->elem->info == par[1])
+            {
+                filho = percorreSelva;
+                filhoEstah = TRUE;
+            }
+        }
+
+        // Associar pais e filhos caso os pares sejam válidos
+        if (par[0] != par[1] && strlen (par) == 2 && paiEstah == TRUE && filhoEstah == TRUE && filho->elem->pai == NULL)
+        {
+            if (pai->elem->fesq == NULL)
+            {
+                pai->elem->fesq = filho->elem;
+                filho->elem->pai = pai->elem;
             }
             else
             {
-                pontFilho->elem->idir = pontPai->elem->fesq;
-                pontPai->elem->fesq = pontFilho->elem;
-                pontFilho->elem->pai = pontPai->elem;
-
+                filho->elem->idir = pai->elem->fesq;
+                pai->elem->fesq = filho->elem;
+                filho->elem->pai = pai->elem;
             }
 
-            pontAux->prox = pontFilho->prox;
-            free (pontFilho);
-
-            paiEstah = FALSE;
-            filhoEstah = FALSE;
+            numValidos++;
         }
         else
         {
-            printf ("Par invalido");
+            printf ("Par invalido\n");
+            n++;
         }
+        
+        
+    }
+
+    // Dar free nas celulas da floresta que são filhos de alguém
+    percorreSelva = F;
+    while (percorreSelva->prox != NULL)
+    {
+        if (percorreSelva->prox->elem->pai != NULL)
+        {
+            aux = percorreSelva->prox;
+            percorreSelva->prox = percorreSelva->prox->prox;
+            free (aux);
+        }
+        else
+        {
+            percorreSelva = percorreSelva->prox;
+        }
+        
     }
 }
 
@@ -301,6 +343,78 @@ arvore Criacao (informacao carac,floresta selva)
 
     return nova;
 }
+
+/*		Funcoes para coletar informacao das arvores    */
+void Parentetica (arvore A)
+{
+    noh pont1;
+    printf (" (%c",Elemento(A,A));
+
+    pont1 = FilhoEsquerdo(A, A);
+    // Escreve a parentetica recursivamente, até que o filho esquerdo da primeira instância seja nulo
+    while (pont1 != NULL)
+    {
+        if (pont1 != NULL) Parentetica(pont1);
+        pont1 = IrmaoDireito(pont1,A);
+    }
+    printf (")");
+}
+
+int Altura (noh n, arvore A) {
+	int maxalt, aux; noh f;
+	if (n == nulo) return -1;
+	f = FilhoEsquerdo (n, A);
+	if (f == nulo) return 0;
+	for (maxalt = 0; f != nulo; f = IrmaoDireito (f, A)) {
+		aux = Altura (f, A);
+		if (aux > maxalt) maxalt = aux;
+	}
+   return maxalt + 1;
+}
+
+int NumNohs (noh n, arvore A) {
+	int numNohs, aux; noh f;
+    if (n == nulo) return 0;
+	f = FilhoEsquerdo (n, A);
+	if (f == nulo) return 1;
+	for (numNohs = 0; f != nulo; f = IrmaoDireito (f, A)) {
+		aux = NumNohs (f, A);
+		numNohs += aux;
+	}
+   return numNohs + 1;
+	
+}
+
+int MaxLargura (arvore A) {
+    int maxLargura = 0, largura, i;
+    int h = Altura(A,A);
+
+    // Percorrendo a árvore por sua altura, enquanto não chegar no fim
+    for (i = 1; i <= h; i++)
+    {
+        // Comparar a largura do nivel atual com a variável maxLargura
+        largura = NivelLargura(A, i);
+        if (largura > maxLargura) maxLargura = largura;
+    }
+    
+    return maxLargura + 1;
+
+}
+
+int NivelLargura (arvore A, int nivel)
+{
+    // Largura 0 para árvore vazia
+    if (A == NULL) return 0;
+    // Largura 1 para raiz
+    if (nivel == 1) return 1;
+    // Retorna a largura do nível ao chamar essa função recursivamente
+    else if (nivel > 1)
+    {
+        return NivelLargura(FilhoEsquerdo(A,A), nivel-1) + NivelLargura(IrmaoDireito(FilhoEsquerdo(A,A), A), nivel-1);
+    }
+}
+
+
 
 
 
