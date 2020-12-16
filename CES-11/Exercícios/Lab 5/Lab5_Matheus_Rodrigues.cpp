@@ -32,7 +32,7 @@ struct noh {vertice elem; noh *prox;};
 
 /*	 Variaveis globais */
 
-Grafo G, Gr;
+Grafo G, X;
 FILE *filein;
 int cont; pilha P; logic aciclico;pilha topol;
 
@@ -51,6 +51,7 @@ logic Procurar (vertice, pilha*);
 void BuscaProf (vertice, Grafo*);
 void OrdTopologica (pilha);
 void FortConexos(Grafo*, Grafo*);
+void FreeSobras(Grafo*);
 
 /*		Programa Principal:  	*/
 
@@ -73,8 +74,8 @@ int main () {
 	else
 	{
 		printf ("Ciclico\n");
-		FortConexos(&G, &Gr);
-		EscreverGrafo(&Gr);
+		FortConexos(&G, &X);
+		EscreverGrafo(&X);
 		printf ("\n\n");
 	} 
 
@@ -144,44 +145,8 @@ void LerGrafo (Grafo *G) {
 	}
 
 	// Dar free nas sobras
-	for (i = 1; i <= G->nvert; i++)
-	{
-		pontAdj = G->EspacoVertices[i].listadj;
-		if (pontAdj->prox != NULL)
-		{
-			while (pontAdj->prox != NULL)
-			{
-				aux = pontAdj;
-				pontAdj = pontAdj->prox;
-			}
-			aux->prox = pontAdj->prox;
-			free(pontAdj);
-		}
-		else
-		{
-			free(pontAdj);
-			G->EspacoVertices[i].listadj = NULL;
-		}
-
-		pontContra = G->EspacoVertices[i].listcontradj;
-		if (pontContra->prox != NULL)
-		{
-			while (pontContra->prox != NULL)
-			{
-				aux = pontContra;
-				pontContra = pontContra->prox;
-			}
-			aux->prox = pontContra->prox;
-			free(pontContra);
-		}
-		else
-		{
-			free(pontContra);
-			G->EspacoVertices[i].listcontradj = NULL;
-		}
-	}
+	FreeSobras(G);
 	
-
 }
 
 void EscreverGrafo (Grafo *G){
@@ -291,7 +256,7 @@ void OrdTopologica (pilha x){
 // Fortemente conexos
 void FortConexos(Grafo *G, Grafo *Gr){
 	int i;
-	CelulaAdj *pontG, *pontGr, *pontAdj, *pontContra, *aux;
+	CelulaAdj *pontG, *pontGr;
 	
 
 	// Inicializar Gr
@@ -336,9 +301,16 @@ void FortConexos(Grafo *G, Grafo *Gr){
 	}
 
 	// Eliminar sobras de Gr
-	for (i = 1; i <= Gr->nvert; i++)
+	FreeSobras(Gr);
+	
+}
+// Liberar espaços não utilizados da memória dos grafos
+void FreeSobras(Grafo *X){
+	int i;
+	CelulaAdj *pontAdj, *pontContra, *aux;
+	for (i = 1; i <= X->nvert; i++)
 	{
-		pontAdj = Gr->EspacoVertices[i].listadj;
+		pontAdj = X->EspacoVertices[i].listadj;
 		if (pontAdj->prox != NULL)
 		{
 			while (pontAdj->prox != NULL)
@@ -352,10 +324,10 @@ void FortConexos(Grafo *G, Grafo *Gr){
 		else
 		{
 			free(pontAdj);
-			Gr->EspacoVertices[i].listadj = NULL;
+			X->EspacoVertices[i].listadj = NULL;
 		}
 
-		pontContra = Gr->EspacoVertices[i].listcontradj;
+		pontContra = X->EspacoVertices[i].listcontradj;
 		if (pontContra->prox != NULL)
 		{
 			while (pontContra->prox != NULL)
@@ -369,12 +341,9 @@ void FortConexos(Grafo *G, Grafo *Gr){
 		else
 		{
 			free(pontContra);
-			Gr->EspacoVertices[i].listcontradj = NULL;
+			X->EspacoVertices[i].listcontradj = NULL;
 		}
 	}
-	
-
-	
 }
 
 

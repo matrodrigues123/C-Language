@@ -32,7 +32,7 @@ struct noh {vertice elem; noh *prox;};
 
 /*	 Variaveis globais */
 
-Grafo G;
+Grafo G, Gr;
 FILE *filein;
 int cont; pilha P; logic aciclico;pilha topol;
 
@@ -50,17 +50,19 @@ void Travessia (Grafo*);
 logic Procurar (vertice, pilha*);
 void BuscaProf (vertice, Grafo*);
 void OrdTopologica (pilha);
+void FortConexos(Grafo*, Grafo*);
 
 /*		Programa Principal:  	*/
 
 int main () {
 
-/*		Leitura e escrita do grafo  	*/
-
+/*		Leitura e escrita dos grafos  	*/
 	filein = fopen ("DadosGrafo.txt", "r");
+
 	LerGrafo (&G);
 	printf ("\nGrafo G em fase inicial\n");
 	EscreverGrafo (&G);
+	printf ("\n\n");
 	Travessia (&G);
 	if (aciclico == TRUE)
 	{
@@ -70,9 +72,12 @@ int main () {
 	}
 	else
 	{
-		printf ("Ciclico");
-	}
-	
+		printf ("Ciclico\n");
+		FortConexos(&G, &Gr);
+		EscreverGrafo(&Gr);
+		printf ("\n\n");
+	} 
+
   	printf ("\n\n"); system ("pause"); return 0;
 }
 
@@ -281,6 +286,95 @@ void OrdTopologica (pilha x){
 		printf ("%3d", x->elem);
 		Desempilhar (&x);
 	}
+}
+
+// Fortemente conexos
+void FortConexos(Grafo *G, Grafo *Gr){
+	int i;
+	CelulaAdj *pontG, *pontGr, *pontAdj, *pontContra, *aux;
+	
+
+	// Inicializar Gr
+	Gr->nvert = G->nvert;
+	Gr->EspacoVertices = (CelulaVertice *) malloc ((Gr->nvert+1)*sizeof(CelulaVertice));
+	for (i = 1; i <= Gr->nvert ; i++)
+	{
+		Gr->EspacoVertices[i].nvisit = G->EspacoVertices[i].nvisit;
+		Gr->EspacoVertices[i].visit = -1;
+		Gr->EspacoVertices[i].listadj = (CelulaAdj *) malloc (sizeof(CelulaAdj));
+		Gr->EspacoVertices[i].listadj->prox = NULL;
+		Gr->EspacoVertices[i].listcontradj = (CelulaAdj *) malloc (sizeof(CelulaAdj));
+		Gr->EspacoVertices[i].listcontradj->prox = NULL;
+	}
+
+	// Inverter os arcos de G
+	for (i = 1; i <= Gr->nvert ; i++)
+	{
+		pontG = G->EspacoVertices[i].listcontradj;
+		pontGr = Gr->EspacoVertices[i].listadj;
+
+		while (pontG != NULL)
+		{
+			pontGr->vert = pontG->vert;
+			pontGr->prox = (CelulaAdj *) malloc (sizeof(CelulaAdj));
+			pontGr = pontGr->prox;
+			pontGr->prox = NULL;
+			pontG = pontG->prox;
+		}
+		
+		pontG = G->EspacoVertices[i].listadj;
+		pontGr = Gr->EspacoVertices[i].listcontradj;
+
+		while (pontG != NULL)
+		{
+			pontGr->vert = pontG->vert;
+			pontGr->prox = (CelulaAdj *) malloc (sizeof(CelulaAdj));
+			pontGr = pontGr->prox;
+			pontGr->prox = NULL;
+			pontG = pontG->prox;
+		}
+	}
+
+	// Eliminar sobras de Gr
+	for (i = 1; i <= Gr->nvert; i++)
+	{
+		pontAdj = Gr->EspacoVertices[i].listadj;
+		if (pontAdj->prox != NULL)
+		{
+			while (pontAdj->prox != NULL)
+			{
+				aux = pontAdj;
+				pontAdj = pontAdj->prox;
+			}
+			aux->prox = pontAdj->prox;
+			free(pontAdj);
+		}
+		else
+		{
+			free(pontAdj);
+			Gr->EspacoVertices[i].listadj = NULL;
+		}
+
+		pontContra = Gr->EspacoVertices[i].listcontradj;
+		if (pontContra->prox != NULL)
+		{
+			while (pontContra->prox != NULL)
+			{
+				aux = pontContra;
+				pontContra = pontContra->prox;
+			}
+			aux->prox = pontContra->prox;
+			free(pontContra);
+		}
+		else
+		{
+			free(pontContra);
+			Gr->EspacoVertices[i].listcontradj = NULL;
+		}
+	}
+	
+
+	
 }
 
 
