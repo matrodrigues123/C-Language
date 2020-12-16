@@ -56,29 +56,20 @@ void OrdTopologica (pilha);
 int main () {
 
 /*		Leitura e escrita dos grafos  	*/
-	int numGrafos, i;
 	filein = fopen ("DadosGrafo.txt", "r");
-	fscanf (filein, "%d", &numGrafos);
-	for (i = 1; i <= numGrafos; i++)
-	{
-		LerGrafo (&G);
-		printf ("\nGrafo G em fase inicial\n");
-		EscreverGrafo (&G);
-		Travessia (&G);
-		if (aciclico == TRUE)
-		{
-			printf ("Aciclico\n");
-			printf ("Ordem topologica: ");
-			OrdTopologica(topol);
-		}
-		else printf ("Ciclico");
 
-		free(&G);
-		free(P);
+	LerGrafo (&G);
+	printf ("\nGrafo G em fase inicial\n");
+	EscreverGrafo (&G);
+	Travessia (&G);
+	if (aciclico == TRUE)
+	{
+		printf ("Aciclico\n");
+		printf ("Ordem topologica: ");
+		OrdTopologica(topol);
 	}
-	
-	
-	
+	else printf ("Ciclico");
+
   	printf ("\n\n"); system ("pause"); return 0;
 }
 
