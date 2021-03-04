@@ -1,3 +1,9 @@
+/* Matheus Rodrigues Araújo                */
+/* Turma 24.1                              */
+/*                                         */
+/* Exercício 5: Dígrafos                   */
+/* Programa compilado com CodeBlocks 17.12 */
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -15,7 +21,7 @@ struct CelulaAdj {
 
 struct CelulaVertice {
 	logic visit;
-	int nvisit;
+	int nvisit, noutro;
 	CelulaAdj *listadj, *listcontradj;
 };
 
@@ -32,9 +38,9 @@ struct noh {vertice elem; noh *prox;};
 
 /*	 Variaveis globais */
 
-Grafo G, X;
+Grafo G, Gr;
 FILE *filein;
-int cont; pilha P; logic aciclico;pilha topol;
+int cont, contOutro; pilha P; logic aciclico;pilha topol;
 
 
 /*		Prototipos de funcoes	*/
@@ -50,8 +56,10 @@ void Travessia (Grafo*);
 logic Procurar (vertice, pilha*);
 void BuscaProf (vertice, Grafo*);
 void OrdTopologica (pilha);
-void FortConexos(Grafo*, Grafo*);
+void FormarGr(Grafo*, Grafo*);
+void FortConexos (Grafo*);
 void FreeSobras(Grafo*);
+void ResetGrafos (Grafo *, Grafo *);
 
 /*		Programa Principal:  	*/
 
@@ -59,26 +67,33 @@ int main () {
 
 /*		Leitura e escrita dos grafos  	*/
 	filein = fopen ("DadosGrafo.txt", "r");
-
-	LerGrafo (&G);
-	printf ("\nGrafo G em fase inicial\n");
-	EscreverGrafo (&G);
-	printf ("\n\n");
-	Travessia (&G);
-	if (aciclico == TRUE)
+	int numGrafos, i;
+	fscanf (filein, "%d", &numGrafos);
+	for (i = 1; i <= numGrafos; i++)
 	{
-		printf ("Aciclico\n");
-		printf ("Ordem topologica: ");
-		OrdTopologica(topol);
-	}
-	else
-	{
-		printf ("Ciclico\n");
-		FortConexos(&G, &X);
-		EscreverGrafo(&X);
+		LerGrafo (&G);
+		printf ("\nGrafo G em fase inicial\n");
+		Travessia (&G);
+		EscreverGrafo (&G);
 		printf ("\n\n");
-	} 
+		if (aciclico == TRUE)
+		{
+			printf ("Aciclico\n");
+			printf ("Ordem topologica: ");
+			OrdTopologica(topol);
+		}
+		else
+		{
+			printf ("Ciclico\n");
+			FormarGr(&G, &Gr);
+			FortConexos(&Gr);
+			printf ("\n");
+		}
 
+		ResetGrafos(&G, &Gr);
+		
+	}
+	
   	printf ("\n\n"); system ("pause"); return 0;
 }
 
@@ -88,6 +103,7 @@ void LerGrafo (Grafo *G) {
 	logic repetido = FALSE;
 	int i;
 
+	// Inicializa o grafo
 	fscanf (filein, "%d", &G->nvert);
 	G->EspacoVertices = (CelulaVertice *) malloc ((G->nvert+1)*sizeof(CelulaVertice));
 	for (i = 1; i <= G->nvert; i++)
@@ -101,7 +117,7 @@ void LerGrafo (Grafo *G) {
 	}
 	G->aciclico = -1;
 
-	
+	// Forma as listas de adjacência e contra adjacência
 	fscanf (filein, "%d", &vert1);
 	while (vert1 != 0)
 	{
@@ -173,7 +189,7 @@ void EscreverGrafo (Grafo *G){
 	
 }
 
-// Teste de aciclicidade
+// Funções operadoras de pilha
 
 void Empilhar (vertice x, pilha *P) { 
     noh *temp;
@@ -204,13 +220,15 @@ logic Vazia (pilha P) {
     else return FALSE; 
 }
 
+// Funções de busca em profundidade
 void Travessia (Grafo *G)  {
 	vertice v;
 	InicPilha (&P); aciclico = TRUE;
 	for (v = 1; v <= G->nvert; v++)
 		G->EspacoVertices[v].visit = FALSE;
 	cont = 0;
-	for (v = 1; v <= G->nvert && aciclico; v++)
+	contOutro = 0;
+	for (v = 1; v <= G->nvert; v++)
 		if  (G->EspacoVertices[v].visit == FALSE)
 			BuscaProf (v, G);
 }
@@ -220,13 +238,17 @@ void BuscaProf (vertice v, Grafo *G)  {
 	G->EspacoVertices[v].nvisit = cont;
 	Empilhar (v, &P);
 	p = G->EspacoVertices[v].listadj;
-	while (p != NULL && aciclico)  {
+	while (p != NULL)  {
 		if (G->EspacoVertices[p->vert].visit == FALSE)
+		{
 			BuscaProf(p->vert, G);
+		}
 		else if (Procurar (p->vert, &P) == TRUE)
 			aciclico = FALSE;
 		p = p->prox;
 	}
+	contOutro++;
+	G->EspacoVertices[v].noutro = contOutro;
 	Desempilhar (&P);
 	Empilhar (v, &topol);
 }
@@ -253,19 +275,19 @@ void OrdTopologica (pilha x){
 	}
 }
 
-// Fortemente conexos
-void FortConexos(Grafo *G, Grafo *Gr){
+// Funções relacionadas aos vértices fortemente conexos
+void FormarGr(Grafo *G, Grafo *Gr){
 	int i;
 	CelulaAdj *pontG, *pontGr;
 	
-
 	// Inicializar Gr
 	Gr->nvert = G->nvert;
 	Gr->EspacoVertices = (CelulaVertice *) malloc ((Gr->nvert+1)*sizeof(CelulaVertice));
 	for (i = 1; i <= Gr->nvert ; i++)
 	{
 		Gr->EspacoVertices[i].nvisit = G->EspacoVertices[i].nvisit;
-		Gr->EspacoVertices[i].visit = -1;
+		Gr->EspacoVertices[i].noutro = G->EspacoVertices[i].noutro;
+		Gr->EspacoVertices[i].visit = FALSE;
 		Gr->EspacoVertices[i].listadj = (CelulaAdj *) malloc (sizeof(CelulaAdj));
 		Gr->EspacoVertices[i].listadj->prox = NULL;
 		Gr->EspacoVertices[i].listcontradj = (CelulaAdj *) malloc (sizeof(CelulaAdj));
@@ -302,8 +324,45 @@ void FortConexos(Grafo *G, Grafo *Gr){
 
 	// Eliminar sobras de Gr
 	FreeSobras(Gr);
-	
 }
+
+// Percorrer Gr e escrever os fortemente conexos
+void FortConexos (Grafo *Gr){
+	CelulaVertice max;
+	vertice maxVert = 0;
+	int i,k, cont = 1;
+
+	// Obter o vértice de maior numeração e efetuar a busca em profundidade a partir dele
+	max = Gr->EspacoVertices[1];
+	maxVert = 1;
+	printf ("Fortemente conexos:\n");
+	for (i = 1; i <= Gr->nvert; i++)
+	{
+		for (k = 1; k <= Gr->nvert; k++)
+		{
+			if (Gr->EspacoVertices[k].visit == FALSE && Gr->EspacoVertices[k].noutro > max.noutro)
+			{
+				max = Gr->EspacoVertices[k];
+				maxVert = k;
+			}
+		}
+		if  (Gr->EspacoVertices[i].visit == FALSE)
+		{
+			InicPilha(&topol);
+			BuscaProf (maxVert, Gr);
+			printf ("%d:",cont);
+			while (!Vazia(topol))
+			{
+				printf ("%3d", topol->elem);
+				Desempilhar (&topol);
+			}
+			printf ("\n");
+		}
+		max.noutro = 0;
+		cont++;
+	}
+}
+
 // Liberar espaços não utilizados da memória dos grafos
 void FreeSobras(Grafo *X){
 	int i;
@@ -346,5 +405,16 @@ void FreeSobras(Grafo *X){
 	}
 }
 
+// Reiniciar os grafos para novo loop
+void ResetGrafos (Grafo *G, Grafo *Gr){
+	int i;
+	CelulaAdj aux;
 
+	for (i = 1; i <= G->nvert; i++)
+	{
+		free(&G->EspacoVertices[i]);
+		free(&Gr->EspacoVertices[i]);
+	}
+	
+}
 
